@@ -1,6 +1,8 @@
 defmodule OAuth2Example.AuthController do
   use OAuth2Example.Web, :controller
 
+  require Logger
+
   @doc """
   This action is reached via `/auth/:provider` and redirects to the OAuth2 provider
   based on the chosen strategy.
@@ -45,11 +47,13 @@ defmodule OAuth2Example.AuthController do
   defp authorize_url!("github"),   do: GitHub.authorize_url!
   defp authorize_url!("google"),   do: Google.authorize_url!(scope: "https://www.googleapis.com/auth/userinfo.email")
   defp authorize_url!("facebook"), do: Facebook.authorize_url!(scope: "user_photos")
+  defp authorize_url!("bitbucket"), do: Bitbucket.authorize_url!
   defp authorize_url!(_), do: raise "No matching provider available"
 
   defp get_token!("github", code),   do: GitHub.get_token!(code: code)
   defp get_token!("google", code),   do: Google.get_token!(code: code)
   defp get_token!("facebook", code), do: Facebook.get_token!(code: code)
+  defp get_token!("bitbucket", code), do: Bitbucket.get_token!(code: code)
   defp get_token!(_, _), do: raise "No matching provider available"
 
   defp get_user!("github", token) do
@@ -63,5 +67,11 @@ defmodule OAuth2Example.AuthController do
   defp get_user!("facebook", token) do
     {:ok, %{body: user}} = OAuth2.AccessToken.get(token, "/me", fields: "id,name")
     %{name: user["name"], avatar: "https://graph.facebook.com/#{user["id"]}/picture"}
+  end
+  defp get_user!("bitbucket", token) do
+    # Client header contains extra info causing issues with bitbucket api 
+    token = OAuth2.AccessToken.new(%{"access_token" => token.access_token}, %OAuth2.Client{})
+    {:ok, %{body: user}} = OAuth2.AccessToken.get(token, "https://bitbucket.org/api/2.0/user")
+    %{name: user["display_name"], avatar: user["links"]["avatar"]["href"]}
   end
 end

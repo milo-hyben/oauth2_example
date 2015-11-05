@@ -65,6 +65,11 @@
           <i class="fa fa-facebook"></i>
           Sign in with Facebook
         </a>
+
+        <a class="btn btn-primary btn-lg" href="<%= auth_path @conn, :index, "bitbucket" %>">
+          <i class="fa fa-bitbucket"></i>
+          Sign in with Bitbucket
+        </a>
       <% end %>
     </div>
 
